@@ -1,0 +1,122 @@
+version: "3.9"
+
+services:
+  # Core Infrastructure
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: paralegal
+      POSTGRES_PASSWORD: paralegal
+      POSTGRES_DB: paralegal
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U paralegal"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: paralegal
+      MINIO_ROOT_PASSWORD: paralegal123
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Private LLM Box (no egress)
+  private-llm:
+    image: vllm/vllm-openai:latest
+    command: ["--model", "microsoft/DialoGPT-medium", "--port", "8000", "--host", "0.0.0.0"]
+    networks: [private]
+    environment:
+      - NO_EGRESS=true
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    # Uncomment for GPU support
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - capabilities: [gpu]
+
+  # Summarizer Service (Private Network)
+  summarizer:
+    build: ./apps/summarizer
+    depends_on:
+      - private-llm
+      - postgres
+    environment:
+      - DATABASE_URL=postgresql://paralegal:paralegal@postgres:5432/paralegal
+      - PRIVATE_LLM_URL=http://private-llm:8000/v1
+      - NO_EGRESS=true
+      - DEBUG=true
+    networks: [private, default]
+    ports:
+      - "8001:8001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 20s
+      timeout: 10s
+      retries: 3
+
+  # Bridge Service (Redaction + Policy + Audit)
+  bridge:
+    build: ./apps/bridge
+    depends_on:
+      - summarizer
+      - postgres
+    environment:
+      - DATABASE_URL=postgresql://paralegal:paralegal@postgres:5432/paralegal
+      - CONNECTED_LLM_ENABLED=false
+      - ALLOWLIST_TEMPLATES=CFR_SECTION_SUMMARY,CPLR_STANDARD,UK_CASE_CITATION_LOOKUP
+      - NODE_ENV=development
+    networks: [default]
+    ports:
+      - "8002:8002"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/bridge/health"]
+      interval: 20s
+      timeout: 10s
+      retries: 3
+
+  # Landing Page (Optional for MVP)
+  landing:
+    build: ./apps/landing
+    depends_on:
+      - bridge
+    environment:
+      - NEXT_PUBLIC_API_BASE_URL=http://localhost:8002
+      - NODE_ENV=development
+    ports:
+      - "3000:3000"
+    # Will be created later
+
+networks:
+  # Private network with no internet egress
+  private:
+    internal: true
+  
+  # Default network with internet access
+  default:
+    driver: bridge
+
+volumes:
+  pgdata:
+    driver: local
+  minio-data:
+    driver: local
