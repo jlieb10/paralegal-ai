@@ -1,0 +1,13 @@
+# Paralegal AI Workspace
+packages:
+  - "apps/*"
+  - "packages/*"
+
+# Enable shared lockfile
+shared-workspace-lockfile: true
+
+# Auto install peers
+auto-install-peers: true
+
+# Enable workspace protocol for internal deps
+prefer-workspace-packages: true
