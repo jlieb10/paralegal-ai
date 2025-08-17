@@ -1,0 +1,62 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+.env
+*.egg-info/
+
+# Build outputs
+dist/
+build/
+.next/
+*.tsbuildinfo
+
+# Logs
+*.log
+logs/
+
+# Environment
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+.docker/
+
+# Temporary
+tmp/
+temp/
+
+# Config files with secrets
+config/app.yaml
+!config/app.example.yaml
+
+# Model weights and data
+models/
+*.bin
+*.safetensors
+
+# Test artifacts
+coverage/
+.nyc_output/
+.coverage
+htmlcov/
+
+# MinIO data
+minio-data/
