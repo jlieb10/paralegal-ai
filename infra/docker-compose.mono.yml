@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   # Core Infrastructure
   postgres:
@@ -56,7 +54,9 @@ services:
 
   # Summarizer Service (Private Network)
   summarizer:
-    build: ./apps/summarizer
+    build:
+      context: ../
+      dockerfile: apps/summarizer/Dockerfile
     depends_on:
       - private-llm
       - postgres
@@ -76,7 +76,9 @@ services:
 
   # Bridge Service (Redaction + Policy + Audit)
   bridge:
-    build: ./apps/bridge
+    build:
+      context: ../
+      dockerfile: apps/bridge/Dockerfile
     depends_on:
       - summarizer
       - postgres
@@ -96,7 +98,9 @@ services:
 
   # Landing Page
   landing:
-    build: ./apps/landing
+    build:
+      context: ../
+      dockerfile: apps/landing/Dockerfile
     depends_on:
       - bridge
     environment:

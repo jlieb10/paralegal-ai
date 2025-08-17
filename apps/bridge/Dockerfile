@@ -3,15 +3,15 @@ FROM node:20-slim
 WORKDIR /app
 
 # Copy package files
-COPY package*.json ./
-COPY ../../packages/schemas ./packages/schemas
+COPY apps/bridge/package*.json ./
+COPY packages/schemas ./packages/schemas
 
 # Install dependencies
 RUN npm install --only=production
 
 # Copy application code
-COPY src/ ./src/
-COPY nest-cli.json tsconfig.json ./
+COPY apps/bridge/src/ ./src/
+COPY apps/bridge/nest-cli.json apps/bridge/tsconfig.json ./
 
 # Build the application
 RUN npm run build

@@ -3,14 +3,14 @@ FROM node:20-alpine
 WORKDIR /app
 
 # Copy package files
-COPY package*.json ./
-COPY ../../packages/schemas ./packages/schemas
+COPY apps/landing/package*.json ./
+COPY packages/schemas ./packages/schemas
 
 # Install dependencies
 RUN npm install
 
 # Copy application code
-COPY . .
+COPY apps/landing/ .
 
 # Build the application
 RUN npm run build
