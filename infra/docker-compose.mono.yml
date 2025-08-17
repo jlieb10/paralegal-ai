@@ -94,7 +94,7 @@ services:
       timeout: 10s
       retries: 3
 
-  # Landing Page (Optional for MVP)
+  # Landing Page
   landing:
     build: ./apps/landing
     depends_on:
@@ -104,7 +104,11 @@ services:
       - NODE_ENV=development
     ports:
       - "3000:3000"
-    # Will be created later
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 20s
+      timeout: 10s
+      retries: 3
 
 networks:
   # Private network with no internet egress
