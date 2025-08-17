@@ -2,11 +2,16 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Copy package files
+# Copy package files and workspace dependencies
 COPY apps/landing/package*.json ./
-COPY packages/schemas ./packages/schemas
+COPY packages/schemas ./packages/schemas/
 
-# Install dependencies
+# Create a temporary package.json with resolved workspace dependencies
+# Replace "workspace:*" with "file:packages/schemas" for the schemas dependency
+RUN sed 's/"@paralegal-ai\/schemas": "workspace:\*"/"@paralegal-ai\/schemas": "file:packages\/schemas"/g' package.json > package.json.tmp && \
+    mv package.json.tmp package.json
+
+# Install dependencies with npm (now works because we removed workspace: protocol)
 RUN npm install
 
 # Copy application code

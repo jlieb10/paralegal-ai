@@ -2,11 +2,16 @@ FROM node:20-slim
 
 WORKDIR /app
 
-# Copy package files
+# Copy package files and workspace dependencies
 COPY apps/bridge/package*.json ./
-COPY packages/schemas ./packages/schemas
+COPY packages/schemas ./packages/schemas/
 
-# Install dependencies
+# Create a temporary package.json with resolved workspace dependencies
+# Replace "workspace:*" with "file:packages/schemas" for the schemas dependency
+RUN sed 's/"@paralegal-ai\/schemas": "workspace:\*"/"@paralegal-ai\/schemas": "file:packages\/schemas"/g' package.json > package.json.tmp && \
+    mv package.json.tmp package.json
+
+# Install dependencies with npm (production only)
 RUN npm install --only=production
 
 # Copy application code
