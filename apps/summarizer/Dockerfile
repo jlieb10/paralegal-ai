@@ -8,11 +8,11 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for better caching
-COPY pyproject.toml ./
+COPY apps/summarizer/pyproject.toml ./
 RUN pip install --no-cache-dir -e .[dev]
 
 # Copy application code
-COPY src/ ./src/
+COPY apps/summarizer/src/ ./src/
 
 # Create non-root user
 RUN useradd --create-home --shell /bin/bash paralegal
