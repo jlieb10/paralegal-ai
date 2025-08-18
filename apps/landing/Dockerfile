@@ -11,7 +11,7 @@ COPY packages/schemas ./packages/schemas/
 RUN sed 's/"@paralegal-ai\/schemas": "workspace:\*"/"@paralegal-ai\/schemas": "file:packages\/schemas"/g' package.json > package.json.tmp && \
     mv package.json.tmp package.json
 
-# Install dependencies with npm (now works because we removed workspace: protocol)
+# Install dependencies with npm
 RUN npm install
 
 # Copy application code
@@ -21,8 +21,8 @@ COPY apps/landing/ .
 RUN npm run build
 
 # Create non-root user
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S nextjs -u 1001
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nextjs -u 1001
 
 # Set correct ownership
 RUN chown -R nextjs:nodejs /app
