@@ -7,7 +7,7 @@
     "build": "tsc",
     "dev": "tsc --watch",
     "lint": "eslint src --ext .ts",
-    "test": "vitest",
+    "test": "vitest run --reporter=basic",
     "clean": "rm -rf dist"
   },
   "dependencies": {
