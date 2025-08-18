@@ -2,6 +2,10 @@ FROM node:20-alpine
 
 WORKDIR /app
 
+# Configure npm to handle SSL issues in Docker environments
+RUN npm config set strict-ssl false && \
+    npm config set registry http://registry.npmjs.org/
+
 # Copy package files and workspace dependencies
 COPY apps/landing/package*.json ./
 COPY packages/schemas ./packages/schemas/
@@ -12,7 +16,7 @@ RUN sed 's/"@paralegal-ai\/schemas": "workspace:\*"/"@paralegal-ai\/schemas": "f
     mv package.json.tmp package.json
 
 # Install dependencies with npm
-RUN npm install
+RUN npm install --legacy-peer-deps
 
 # Copy application code
 COPY apps/landing/ .

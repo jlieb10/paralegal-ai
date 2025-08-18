@@ -15,7 +15,7 @@ export class RedactionService {
     EMAIL: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g,
     NAME: /\b[A-Z][a-z]+ [A-Z][a-z]+\b/g, // Simple name pattern
     AMOUNT: /\$[\d,]+(?:\.\d{2})?/g,
-    DATE: /\b\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}\b/g,
+    DATE: /\b\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b/g,
     DOMAIN: /\b(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\b/gi
   };
 

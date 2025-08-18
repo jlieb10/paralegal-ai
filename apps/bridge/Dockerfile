@@ -7,6 +7,10 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
+# Configure npm to handle SSL issues in Docker environments
+RUN npm config set strict-ssl false && \
+    npm config set registry http://registry.npmjs.org/
+
 # Copy package files and workspace dependencies
 COPY apps/bridge/package*.json ./
 COPY packages/schemas ./packages/schemas/
@@ -17,7 +21,7 @@ RUN sed 's/"@paralegal-ai\/schemas": "workspace:\*"/"@paralegal-ai\/schemas": "f
     mv package.json.tmp package.json
 
 # Install all dependencies first (needed for build)
-RUN npm install
+RUN npm install --legacy-peer-deps
 
 # Copy application code
 COPY apps/bridge/src/ ./src/
@@ -27,7 +31,7 @@ COPY apps/bridge/nest-cli.json apps/bridge/tsconfig.json ./
 RUN npm run build
 
 # Clean install production dependencies only (this step is critical for smaller image)
-RUN rm -rf node_modules && npm install --only=production
+RUN rm -rf node_modules && npm install --only=production --legacy-peer-deps
 
 # Create non-root user
 RUN useradd --create-home --shell /bin/bash paralegal
