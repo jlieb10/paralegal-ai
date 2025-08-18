@@ -138,7 +138,7 @@ export class PolicyService {
     // Key-specific validations
     if (key === 'section') {
       // Legal section format validation
-      const sectionPattern = /^(\d+\s+(CFR|CPLR)\s+§?\s*[\d\.]+|CPLR\s+§?\s*[\d\.]+)/i;
+      const sectionPattern = /^(\d+\s+(CFR|CPLR)\s+§?\s*[\d.]+|CPLR\s+§?\s*[\d.]+)/i;
       if (!sectionPattern.test(value)) {
         return {
           isValid: false,

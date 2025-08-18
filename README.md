@@ -15,12 +15,12 @@ Privacy-first email summarization for law firms. Process client communications w
 - Node.js 20+
 - pnpm 9+
 - Python 3.11+
-- Docker & Docker Compose
+- Docker & Docker Compose (for production deployment)
 - Optional: GPU for Private LLM
 
 ### 1. Clone and Install
 ```bash
-git clone https://github.com/your-org/paralegal-ai.git
+git clone https://github.com/jlieb10/paralegal-ai.git
 cd paralegal-ai
 pnpm install
 ```
@@ -30,17 +30,40 @@ pnpm install
 pnpm run build
 ```
 
-### 3. Start Infrastructure
+### 3. Run Tests & Linting (Local Development)
 ```bash
+# Lint all code
+pnpm run lint
+
+# Run core tests (schemas + bridge service)
+pnpm run test
+
+# Run all tests including landing page (may require additional setup)
+pnpm run test:all
+```
+
+### 4. Local Development
+```bash
+# Start individual services in development mode
+cd apps/bridge && pnpm run start:dev     # NestJS API server
+cd apps/landing && pnpm run dev          # Next.js frontend
+# Note: Summarizer and Private LLM require Docker for full setup
+```
+
+### 5. Production Deployment (Docker)
+```bash
+# Start all services with Docker Compose
 docker compose -f infra/docker-compose.mono.yml up -d --build
 ```
 
-### 4. Access Services
+**Note**: Docker builds may require network configuration in some environments. Local development with `pnpm` works reliably.
+
+### 6. Access Services
 - **Landing Page**: http://localhost:3000
-- **Demo**: http://localhost:3000/demo
+- **Demo**: http://localhost:3000/demo  
 - **Bridge API**: http://localhost:8002/api
-- **Summarizer**: http://localhost:8001
-- **MinIO Console**: http://localhost:9001
+- **Summarizer**: http://localhost:8001 (Docker only)
+- **MinIO Console**: http://localhost:9001 (Docker only)
 
 ## 🏗 Architecture
 
