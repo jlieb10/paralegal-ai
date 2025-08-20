@@ -1,8 +1,8 @@
-import { Injectable } from '@nestjs/common';
-import { RedactionResultT } from '@paralegal-ai/schemas';
+import { Injectable } from "@nestjs/common";
+import { RedactionResultT } from "@paralegal-ai/schemas";
 
 export interface RedactionFinding {
-  type: 'EMAIL' | 'NAME' | 'AMOUNT' | 'DATE' | 'DOMAIN';
+  type: "EMAIL" | "NAME" | "AMOUNT" | "DATE" | "DOMAIN";
   original: string;
   placeholder: string;
   start: number;
@@ -16,7 +16,8 @@ export class RedactionService {
     NAME: /\b[A-Z][a-z]+ [A-Z][a-z]+\b/g, // Simple name pattern
     AMOUNT: /\$[\d,]+(?:\.\d{2})?/g,
     DATE: /\b\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b/g,
-    DOMAIN: /\b(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\b/gi
+    DOMAIN:
+      /\b(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\b/gi,
   };
 
   private readonly maxPayloadLength = 512;
@@ -26,8 +27,8 @@ export class RedactionService {
     const findings: Record<string, RedactionFinding[]> = {};
 
     // Process EMAIL pattern first to avoid conflicts with DOMAIN
-    const patternOrder = ['EMAIL', 'NAME', 'AMOUNT', 'DATE', 'DOMAIN'] as const;
-    
+    const patternOrder = ["EMAIL", "NAME", "AMOUNT", "DATE", "DOMAIN"] as const;
+
     // Apply each redaction pattern in order
     for (const type of patternOrder) {
       const pattern = this.patterns[type];
@@ -40,32 +41,35 @@ export class RedactionService {
         if (match.index !== undefined) {
           const original = match[0];
           const placeholder = this.generatePlaceholder(type);
-          
+
           findings[type].unshift({
             type: type as any,
             original,
             placeholder,
             start: match.index,
-            end: match.index + original.length
+            end: match.index + original.length,
           });
 
           // Replace immediately to avoid conflicts
-          redactedText = redactedText.substring(0, match.index) + 
-                        placeholder + 
-                        redactedText.substring(match.index + original.length);
+          redactedText =
+            redactedText.substring(0, match.index) +
+            placeholder +
+            redactedText.substring(match.index + original.length);
         }
       }
     }
 
     // Policy checks
     const isSafe = this.validatePolicy(redactedText, findings);
-    const rejectionReason = isSafe ? undefined : this.getRejectionReason(redactedText, findings);
+    const rejectionReason = isSafe
+      ? undefined
+      : this.getRejectionReason(redactedText, findings);
 
     return {
       redacted_text: redactedText,
       findings,
       is_safe: isSafe,
-      rejection_reason: rejectionReason
+      rejection_reason: rejectionReason,
     };
   }
 
@@ -79,7 +83,10 @@ export class RedactionService {
     return {};
   }
 
-  private validatePolicy(redactedText: string, findings: Record<string, RedactionFinding[]>): boolean {
+  private validatePolicy(
+    redactedText: string,
+    findings: Record<string, RedactionFinding[]>,
+  ): boolean {
     // Check length limit
     if (redactedText.length > this.maxPayloadLength) {
       return false;
@@ -95,7 +102,7 @@ export class RedactionService {
     const suspiciousPatterns = [
       /\b\d{3}-\d{2}-\d{4}\b/, // SSN pattern
       /\b\d{16}\b/, // Credit card pattern
-      /\b[A-Z]{2}\d{7}\b/ // License pattern
+      /\b[A-Z]{2}\d{7}\b/, // License pattern
     ];
 
     for (const pattern of suspiciousPatterns) {
@@ -107,16 +114,19 @@ export class RedactionService {
     return true;
   }
 
-  private getRejectionReason(redactedText: string, findings: Record<string, RedactionFinding[]>): string {
+  private getRejectionReason(
+    redactedText: string,
+    findings: Record<string, RedactionFinding[]>,
+  ): string {
     if (redactedText.length > this.maxPayloadLength) {
       return `Payload too long: ${redactedText.length} > ${this.maxPayloadLength} chars`;
     }
 
     const remainingEmails = redactedText.match(this.patterns.EMAIL);
     if (remainingEmails && remainingEmails.length > 0) {
-      return 'Remaining email addresses detected after redaction';
+      return "Remaining email addresses detected after redaction";
     }
 
-    return 'Policy violation: Potential PII detected in redacted text';
+    return "Policy violation: Potential PII detected in redacted text";
   }
 }

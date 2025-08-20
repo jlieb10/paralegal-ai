@@ -1,10 +1,10 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { BridgeController } from '../src/bridge.controller';
-import { QueryService } from '../src/query/query.service';
-import { RedactionService } from '../src/redaction/redaction.service';
-import { PolicyService } from '../src/policy/policy.service';
+import { Test, TestingModule } from "@nestjs/testing";
+import { BridgeController } from "../src/bridge.controller";
+import { QueryService } from "../src/query/query.service";
+import { RedactionService } from "../src/redaction/redaction.service";
+import { PolicyService } from "../src/policy/policy.service";
 
-describe('BridgeController', () => {
+describe("BridgeController", () => {
   let controller: BridgeController;
 
   beforeEach(async () => {
@@ -37,15 +37,15 @@ describe('BridgeController', () => {
     controller = module.get<BridgeController>(BridgeController);
   });
 
-  it('should be defined', () => {
+  it("should be defined", () => {
     expect(controller).toBeDefined();
   });
 
-  describe('healthCheck', () => {
-    it('should return health status', async () => {
+  describe("healthCheck", () => {
+    it("should return health status", async () => {
       const result = await controller.healthCheck();
-      expect(result.status).toBe('healthy');
-      expect(result.service).toBe('bridge');
+      expect(result.status).toBe("healthy");
+      expect(result.service).toBe("bridge");
     });
   });
 });

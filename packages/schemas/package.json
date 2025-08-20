@@ -6,7 +6,9 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit",
     "lint": "eslint src --ext .ts",
+    "format": "prettier --write \"src/**/*.ts\"",
     "test": "vitest run --reporter=basic",
     "clean": "rm -rf dist"
   },

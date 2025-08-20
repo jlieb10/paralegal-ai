@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  # Landing page (Next.js)
+  landing:
+    build:
+      context: .
+      dockerfile: apps/landing/Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_BASE_URL=http://localhost:8002
+    depends_on:
+      - bridge
+
+  # Bridge service (NestJS) - for demo purposes
+  bridge:
+    build:
+      context: .
+      dockerfile: apps/bridge/Dockerfile
+    ports:
+      - "8002:8002"
+    environment:
+      - NODE_ENV=production
+      - PORT=8002
+      - CONNECTED_LLM_ENABLED=false

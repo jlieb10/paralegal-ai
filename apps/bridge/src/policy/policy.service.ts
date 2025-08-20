@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable } from "@nestjs/common";
 
 export interface QueryTemplate {
   id: string;
@@ -11,30 +11,35 @@ export interface QueryTemplate {
 @Injectable()
 export class PolicyService {
   private readonly allowedTemplates: Record<string, QueryTemplate> = {
-    'CFR_SECTION_SUMMARY': {
-      id: 'CFR_SECTION_SUMMARY',
-      name: 'CFR Section Summary',
-      template: 'Return a one-sentence description of {section} with source link.',
-      placeholders: ['section'],
-      maxLength: 200
+    CFR_SECTION_SUMMARY: {
+      id: "CFR_SECTION_SUMMARY",
+      name: "CFR Section Summary",
+      template:
+        "Return a one-sentence description of {section} with source link.",
+      placeholders: ["section"],
+      maxLength: 200,
     },
-    'CPLR_STANDARD': {
-      id: 'CPLR_STANDARD',
-      name: 'CPLR Standard',
-      template: 'Provide the standard for CPLR § {section} with a short cite.',
-      placeholders: ['section'],
-      maxLength: 300
+    CPLR_STANDARD: {
+      id: "CPLR_STANDARD",
+      name: "CPLR Standard",
+      template: "Provide the standard for CPLR § {section} with a short cite.",
+      placeholders: ["section"],
+      maxLength: 300,
     },
-    'UK_CASE_CITATION_LOOKUP': {
-      id: 'UK_CASE_CITATION_LOOKUP',
-      name: 'UK Case Citation Lookup',
-      template: 'Return official citation and neutral citation for {case_name} {year}.',
-      placeholders: ['case_name', 'year'],
-      maxLength: 250
-    }
+    UK_CASE_CITATION_LOOKUP: {
+      id: "UK_CASE_CITATION_LOOKUP",
+      name: "UK Case Citation Lookup",
+      template:
+        "Return official citation and neutral citation for {case_name} {year}.",
+      placeholders: ["case_name", "year"],
+      maxLength: 250,
+    },
   };
 
-  validateTemplate(templateId: string, placeholders: Record<string, string>): {
+  validateTemplate(
+    templateId: string,
+    placeholders: Record<string, string>,
+  ): {
     isValid: boolean;
     error?: string;
     template?: QueryTemplate;
@@ -44,31 +49,31 @@ export class PolicyService {
     if (!template) {
       return {
         isValid: false,
-        error: `Template '${templateId}' is not in allowlist`
+        error: `Template '${templateId}' is not in allowlist`,
       };
     }
 
     // Check required placeholders
     const missingPlaceholders = template.placeholders.filter(
-      placeholder => !placeholders[placeholder]
+      (placeholder) => !placeholders[placeholder],
     );
 
     if (missingPlaceholders.length > 0) {
       return {
         isValid: false,
-        error: `Missing required placeholders: ${missingPlaceholders.join(', ')}`
+        error: `Missing required placeholders: ${missingPlaceholders.join(", ")}`,
       };
     }
 
     // Check for extra placeholders
     const extraPlaceholders = Object.keys(placeholders).filter(
-      key => !template.placeholders.includes(key)
+      (key) => !template.placeholders.includes(key),
     );
 
     if (extraPlaceholders.length > 0) {
       return {
         isValid: false,
-        error: `Unexpected placeholders: ${extraPlaceholders.join(', ')}`
+        error: `Unexpected placeholders: ${extraPlaceholders.join(", ")}`,
       };
     }
 
@@ -78,14 +83,14 @@ export class PolicyService {
       if (!validation.isValid) {
         return {
           isValid: false,
-          error: `Invalid placeholder '${key}': ${validation.error}`
+          error: `Invalid placeholder '${key}': ${validation.error}`,
         };
       }
     }
 
     return {
       isValid: true,
-      template
+      template,
     };
   }
 
@@ -107,7 +112,10 @@ export class PolicyService {
     return Object.values(this.allowedTemplates);
   }
 
-  private validatePlaceholderValue(key: string, value: string): {
+  private validatePlaceholderValue(
+    key: string,
+    value: string,
+  ): {
     isValid: boolean;
     error?: string;
   } {
@@ -115,7 +123,7 @@ export class PolicyService {
     if (value.length > 100) {
       return {
         isValid: false,
-        error: 'Value too long (max 100 characters)'
+        error: "Value too long (max 100 characters)",
       };
     }
 
@@ -130,30 +138,31 @@ export class PolicyService {
       if (pattern.test(value)) {
         return {
           isValid: false,
-          error: 'Value appears to contain PII'
+          error: "Value appears to contain PII",
         };
       }
     }
 
     // Key-specific validations
-    if (key === 'section') {
+    if (key === "section") {
       // Legal section format validation
-      const sectionPattern = /^(\d+\s+(CFR|CPLR)\s+§?\s*[\d.]+|CPLR\s+§?\s*[\d.]+)/i;
+      const sectionPattern =
+        /^(\d+\s+(CFR|CPLR)\s+§?\s*[\d.]+|CPLR\s+§?\s*[\d.]+)/i;
       if (!sectionPattern.test(value)) {
         return {
           isValid: false,
-          error: 'Invalid legal section format'
+          error: "Invalid legal section format",
         };
       }
     }
 
-    if (key === 'year') {
+    if (key === "year") {
       // Year validation
       const year = parseInt(value);
       if (isNaN(year) || year < 1800 || year > new Date().getFullYear()) {
         return {
           isValid: false,
-          error: 'Invalid year'
+          error: "Invalid year",
         };
       }
     }

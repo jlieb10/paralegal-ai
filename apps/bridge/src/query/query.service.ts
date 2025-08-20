@@ -1,9 +1,12 @@
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
-import { BridgeQueryRequestT, BridgeQueryResponseT } from '@paralegal-ai/schemas';
-import { RedactionService } from '../redaction/redaction.service';
-import { PolicyService } from '../policy/policy.service';
-import { AuditService } from '../audit/audit.service';
-import axios from 'axios';
+import { Injectable, HttpException, HttpStatus } from "@nestjs/common";
+import {
+  BridgeQueryRequestT,
+  BridgeQueryResponseT,
+} from "@paralegal-ai/schemas";
+import { RedactionService } from "../redaction/redaction.service";
+import { PolicyService } from "../policy/policy.service";
+import { AuditService } from "../audit/audit.service";
+import axios from "axios";
 
 @Injectable()
 export class QueryService {
@@ -13,24 +16,26 @@ export class QueryService {
     private readonly auditService: AuditService,
   ) {}
 
-  async executeQuery(request: BridgeQueryRequestT): Promise<BridgeQueryResponseT> {
+  async executeQuery(
+    request: BridgeQueryRequestT,
+  ): Promise<BridgeQueryResponseT> {
     // Step 1: Validate template and placeholders
     const validation = this.policyService.validateTemplate(
       request.template_id,
-      request.placeholders
+      request.placeholders,
     );
 
     if (!validation.isValid) {
       throw new HttpException(
         `Policy violation: ${validation.error}`,
-        HttpStatus.FORBIDDEN
+        HttpStatus.FORBIDDEN,
       );
     }
 
     // Step 2: Build query from template
     const query = this.policyService.buildQuery(
       request.template_id,
-      request.placeholders
+      request.placeholders,
     );
 
     // Step 3: Additional redaction check on final query
@@ -38,39 +43,41 @@ export class QueryService {
     if (!redactionResult.is_safe) {
       throw new HttpException(
         `Redaction policy violation: ${redactionResult.rejection_reason}`,
-        HttpStatus.FORBIDDEN
+        HttpStatus.FORBIDDEN,
       );
     }
 
     // Step 4: Execute query against connected LLM (if enabled)
-    let answer = 'Mock response for MVP';
-    let sources = [{ title: 'Mock Source', url: 'https://example.com' }];
-    
-    const connectedLlmEnabled = process.env.CONNECTED_LLM_ENABLED === 'true';
+    let answer = "Mock response for MVP";
+    let sources = [{ title: "Mock Source", url: "https://example.com" }];
+
+    const connectedLlmEnabled = process.env.CONNECTED_LLM_ENABLED === "true";
     if (connectedLlmEnabled) {
       try {
-        const response = await this.queryConnectedLLM(redactionResult.redacted_text);
+        const response = await this.queryConnectedLLM(
+          redactionResult.redacted_text,
+        );
         answer = response.answer;
         sources = response.sources;
       } catch (error) {
         // Log error but don't fail - return mock response
-        console.warn('Connected LLM query failed:', error.message);
+        console.warn("Connected LLM query failed:", error.message);
       }
     }
 
     // Step 5: Log to audit trail
     const auditId = await this.auditService.logBridgeQuery(
-      'bridge-service',
+      "bridge-service",
       request.template_id,
       request.placeholders,
-      'connected-llm',
-      answer
+      "connected-llm",
+      answer,
     );
 
     return {
       answer,
       sources,
-      audit_id: auditId
+      audit_id: auditId,
     };
   }
 
@@ -78,8 +85,9 @@ export class QueryService {
     answer: string;
     sources: Array<{ title: string; url: string }>;
   }> {
-    const connectedLlmUrl = process.env.CONNECTED_LLM_URL || 'http://connected-llm:8002';
-    
+    const connectedLlmUrl =
+      process.env.CONNECTED_LLM_URL || "http://connected-llm:8002";
+
     try {
       const response = await axios.post(
         `${connectedLlmUrl}/query`,
@@ -87,9 +95,9 @@ export class QueryService {
         {
           timeout: 30000,
           headers: {
-            'Content-Type': 'application/json',
-          }
-        }
+            "Content-Type": "application/json",
+          },
+        },
       );
 
       return response.data;
@@ -102,7 +110,10 @@ export class QueryService {
     return this.auditService.getEntries(limit);
   }
 
-  async validateAuditChain(): Promise<{ isValid: boolean; merkleRoot: string }> {
+  async validateAuditChain(): Promise<{
+    isValid: boolean;
+    merkleRoot: string;
+  }> {
     const isValid = await this.auditService.validateChain();
     const merkleRoot = await this.auditService.getMerkleRoot();
 

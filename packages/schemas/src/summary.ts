@@ -15,7 +15,7 @@ export const SummaryBullet = z.object({
 export const ContractFlag = z.object({
   type: z.enum([
     "CONTRACT_TERM",
-    "LIABILITY_CAP", 
+    "LIABILITY_CAP",
     "INDEMNITY",
     "TERMINATION",
     "GOVERNING_LAW",
@@ -27,7 +27,7 @@ export const ContractFlag = z.object({
     "PAYMENT_TERMS",
     "AUTO_RENEWAL",
     "NOTICE_PERIODS",
-    "DATE_DEADLINE"
+    "DATE_DEADLINE",
   ]),
   term: z.string().optional(),
   date: z.string().optional(), // ISO date string
@@ -40,15 +40,19 @@ export const ContractFlag = z.object({
 export const FactRequest = z.object({
   template_id: z.enum([
     "CFR_SECTION_SUMMARY",
-    "CPLR_STANDARD", 
-    "UK_CASE_CITATION_LOOKUP"
+    "CPLR_STANDARD",
+    "UK_CASE_CITATION_LOOKUP",
   ]),
   placeholders: z.record(z.string()),
   bridge_audit_id: z.string().optional(),
-  sources: z.array(z.object({
-    title: z.string(),
-    url: z.string(),
-  })).optional(),
+  sources: z
+    .array(
+      z.object({
+        title: z.string(),
+        url: z.string(),
+      }),
+    )
+    .optional(),
 });
 
 export const Provenance = z.object({

@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+  push:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [20.x]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v2
+      with:
+        version: 9
+
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.pnpm-store
+        key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-pnpm-
+
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+
+    - name: Run environment doctor
+      run: pnpm run doctor || true
+
+    - name: Run linting
+      run: pnpm run lint
+
+    - name: Run type checking
+      run: pnpm run typecheck
+
+    - name: Run tests
+      run: pnpm run test
+
+    - name: Build all packages
+      run: pnpm run build
+
+    - name: Test production start (timeout after 10s)
+      run: |
+        timeout 10s pnpm run start:prod &
+        sleep 5
+        curl -f http://localhost:3000 || exit 1
+        pkill -f next-server || true

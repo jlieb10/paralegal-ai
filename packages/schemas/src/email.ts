@@ -13,12 +13,16 @@ export const EmailRecord = z.object({
   date: z.string(), // ISO-8601
   plaintext: z.string(),
   html: z.string().optional(),
-  attachments: z.array(z.object({
-    filename: z.string(),
-    content_type: z.string(),
-    size: z.number(),
-    s3_key: z.string().optional(), // MinIO/S3 object key
-  })).optional(),
+  attachments: z
+    .array(
+      z.object({
+        filename: z.string(),
+        content_type: z.string(),
+        size: z.number(),
+        s3_key: z.string().optional(), // MinIO/S3 object key
+      }),
+    )
+    .optional(),
   headers: z.record(z.string()),
   created_at: z.string(), // ISO-8601
   updated_at: z.string(), // ISO-8601
@@ -28,10 +32,13 @@ export const EmailRecord = z.object({
 export const NormalizedEmail = z.object({
   id: z.string(),
   plaintext: z.string(),
-  html_anchors: z.record(z.object({ // anchor_id -> position mapping
-    start: z.number(),
-    end: z.number(),
-  })),
+  html_anchors: z.record(
+    z.object({
+      // anchor_id -> position mapping
+      start: z.number(),
+      end: z.number(),
+    }),
+  ),
   metadata: z.object({
     from: z.string(),
     to: z.array(z.string()),

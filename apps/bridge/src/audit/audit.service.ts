@@ -1,26 +1,26 @@
-import { Injectable } from '@nestjs/common';
-import { createHash } from 'crypto';
-import { AuditLogEntryT } from '@paralegal-ai/schemas';
+import { Injectable } from "@nestjs/common";
+import { createHash } from "crypto";
+import { AuditLogEntryT } from "@paralegal-ai/schemas";
 
 @Injectable()
 export class AuditService {
   private entries: AuditLogEntryT[] = [];
-  private lastHash: string = '0000000000000000'; // Genesis hash
+  private lastHash: string = "0000000000000000"; // Genesis hash
 
   async logBridgeQuery(
     requesterService: string,
     templateId: string,
     placeholders: Record<string, string>,
     modelId: string,
-    result: string
+    result: string,
   ): Promise<string> {
     const timestamp = new Date().toISOString();
     const id = this.generateId();
-    
+
     // Hash the placeholders
     const placeholdersHash = this.hashObject(placeholders);
     const resultHash = this.hashString(result);
-    
+
     // Create new entry
     const entry: AuditLogEntryT = {
       id,
@@ -30,18 +30,18 @@ export class AuditService {
       placeholders_hash: placeholdersHash,
       model_id: modelId,
       result_hash: resultHash,
-      previous_hash: this.lastHash
+      previous_hash: this.lastHash,
     };
 
     // Add to chain
     this.entries.push(entry);
-    
+
     // Update chain hash
     const entryHash = this.hashObject(entry);
     this.lastHash = entryHash;
 
     // In production, this would persist to database
-    console.log('[AUDIT]', JSON.stringify(entry));
+    console.log("[AUDIT]", JSON.stringify(entry));
 
     return id;
   }
@@ -52,7 +52,7 @@ export class AuditService {
     }
 
     // Simple merkle root calculation
-    const hashes = this.entries.map(entry => this.hashObject(entry));
+    const hashes = this.entries.map((entry) => this.hashObject(entry));
     return this.calculateMerkleRoot(hashes);
   }
 
@@ -82,7 +82,7 @@ export class AuditService {
   }
 
   private hashString(input: string): string {
-    return createHash('sha256').update(input).digest('hex').substring(0, 16);
+    return createHash("sha256").update(input).digest("hex").substring(0, 16);
   }
 
   private hashObject(obj: any): string {
