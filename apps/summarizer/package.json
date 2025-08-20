@@ -1,0 +1,15 @@
+{
+  "name": "@paralegal-ai/summarizer",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Python FastAPI wrapper for dev orchestration",
+  "scripts": {
+    "dev": "cd src/summarizer && python -m uvicorn main:app --reload --host 0.0.0.0 --port 8001",
+    "build": "echo 'Python service - no build needed'",
+    "start": "cd src/summarizer && python -m uvicorn main:app --host 0.0.0.0 --port 8001",
+    "typecheck": "echo 'Python service - no typecheck'",
+    "lint": "echo 'Python service - use ruff/black'",
+    "format": "echo 'Python service - use black'",
+    "test": "pytest"
+  }
+}

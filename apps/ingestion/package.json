@@ -1,0 +1,20 @@
+{
+  "name": "@paralegal/ingestion",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Email ingestion service with synthetic fixtures",
+  "scripts": {
+    "dev": "node src/server.js",
+    "build": "echo 'Ingestion stub - no build needed'",
+    "start": "node src/server.js",
+    "typecheck": "echo 'Ingestion stub - no typecheck'",
+    "lint": "echo 'Ingestion stub - no lint'",
+    "format": "echo 'Ingestion stub - no format'",
+    "test": "echo 'Ingestion stub - no tests yet'"
+  },
+  "dependencies": {
+    "express": "^4.18.0",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {}
+}
