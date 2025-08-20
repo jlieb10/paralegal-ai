@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y \
 RUN npm config set strict-ssl false && \
     npm config set registry http://registry.npmjs.org/
 
-# Copy package files and workspace dependencies
+# Copy package files and workspace dependencies (with built schemas)
 COPY apps/bridge/package*.json ./
 COPY packages/schemas ./packages/schemas/
 
@@ -22,9 +22,6 @@ RUN sed 's/"@paralegal-ai\/schemas": "workspace:\*"/"@paralegal-ai\/schemas": "f
 
 # Install all dependencies first (needed for build)
 RUN npm install --legacy-peer-deps
-
-# Build the schemas package (required dependency)
-RUN cd packages/schemas && npm run build
 
 # Copy application code
 COPY apps/bridge/src/ ./src/
