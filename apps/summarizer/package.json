@@ -4,7 +4,7 @@
   "private": true,
   "description": "Python FastAPI wrapper for dev orchestration",
   "scripts": {
-    "dev": "cd src/summarizer && python -m uvicorn main:app --reload --host 0.0.0.0 --port 8001",
+    "dev": "cd src && python -m summarizer.main",
     "build": "echo 'Python service - no build needed'",
     "start": "cd src/summarizer && python -m uvicorn main:app --host 0.0.0.0 --port 8001",
     "typecheck": "echo 'Python service - no typecheck'",
