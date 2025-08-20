@@ -23,6 +23,9 @@ RUN sed 's/"@paralegal-ai\/schemas": "workspace:\*"/"@paralegal-ai\/schemas": "f
 # Install all dependencies first (needed for build)
 RUN npm install --legacy-peer-deps
 
+# Build the schemas package (required dependency)
+RUN cd packages/schemas && npm run build
+
 # Copy application code
 COPY apps/bridge/src/ ./src/
 COPY apps/bridge/nest-cli.json apps/bridge/tsconfig.json ./
@@ -32,22 +35,6 @@ RUN npm run build
 
 # Clean install production dependencies only (this step is critical for smaller image)
 RUN rm -rf node_modules && npm install --only=production --legacy-peer-deps
-
-# Create non-root user
-RUN useradd --create-home --shell /bin/bash paralegal
-RUN chown -R paralegal:paralegal /app
-USER paralegal
-
-# Environment variables
-ENV NODE_ENV=production
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8002/bridge/health || exit 1
-
-EXPOSE 8002
-
-CMD ["npm", "run", "start:prod"]
 
 # Create non-root user
 RUN useradd --create-home --shell /bin/bash paralegal

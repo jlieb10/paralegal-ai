@@ -18,8 +18,10 @@ RUN sed 's/"@paralegal-ai\/schemas": "workspace:\*"/"@paralegal-ai\/schemas": "f
 # Install dependencies with npm
 RUN npm install --legacy-peer-deps
 
-# Copy application code
-COPY apps/landing/ .
+# Copy application code (excluding node_modules and build artifacts via .dockerignore)
+COPY apps/landing/src/ ./src/
+COPY apps/landing/next.config.js apps/landing/tailwind.config.ts apps/landing/tsconfig.json ./
+COPY apps/landing/.eslintrc.json apps/landing/next-env.d.ts ./
 
 # Build the application
 RUN npm run build
