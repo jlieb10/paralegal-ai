@@ -89,7 +89,6 @@ function checkPorts() {
     try {
       // Try to connect to the port
       const { spawn } = require('child_process');
-      const netstat = spawn('netstat', ['-tuln']);
       const output = execSync(`netstat -tuln 2>/dev/null | grep :${port} || echo ""`, { encoding: 'utf8' });
       if (output.trim()) {
         busyPorts.push(port);
