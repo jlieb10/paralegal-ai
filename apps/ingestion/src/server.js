@@ -134,6 +134,21 @@ app.get('/', (req, res) => {
   });
 });
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`[ingestion] Server running on port ${PORT}`);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('[ingestion] Received SIGTERM, shutting down gracefully');
+  server.close(() => {
+    console.log('[ingestion] Process terminated');
+  });
+});
+
+process.on('SIGINT', () => {
+  console.log('[ingestion] Received SIGINT, shutting down gracefully');
+  server.close(() => {
+    console.log('[ingestion] Process terminated');
+  });
 });
