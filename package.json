@@ -4,7 +4,12 @@
   "private": true,
   "description": "Privacy-first email summarization for law firms",
   "scripts": {
-    "dev": "pnpm -r run dev",
+    "dev": "concurrently -k -p \"[{name}]\" -n INGESTION,SUMMARIZER,BRIDGE,LANDING,LLM \"pnpm --filter @paralegal/ingestion dev\" \"pnpm --filter @paralegal-ai/summarizer dev\" \"pnpm --filter @paralegal-ai/bridge dev\" \"pnpm --filter @paralegal-ai/landing dev\" \"pnpm run dev:llm\"",
+    "dev:llm": "docker compose -f infra/docker-compose.llm.yml --profile cpu-llm up --build",
+    "dev:llm:gpu": "docker compose -f infra/docker-compose.llm.yml up --build",
+    "dev:llm:cpu": "docker compose -f infra/docker-compose.llm.yml --profile cpu-llm up --build",
+    "dev:llm:down": "docker compose -f infra/docker-compose.llm.yml down -v",
+    "dev:check": "wait-on -t 90000 tcp:3000 tcp:4001 tcp:8001 tcp:8002 && node scripts/print-dev-ready.js",
     "build": "pnpm -r run build",
     "start": "cd apps/landing && pnpm run start",
     "start:prod": "pnpm run start",
@@ -21,10 +26,12 @@
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "concurrently": "^9.2.0",
+    "eslint": "^8.0.0",
+    "prettier": "^3.0.0",
     "typescript": "^5.0.0",
     "vitest": "^1.0.0",
-    "prettier": "^3.0.0",
-    "eslint": "^8.0.0"
+    "wait-on": "^8.0.4"
   },
   "pnpm": {
     "overrides": {

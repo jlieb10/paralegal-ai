@@ -1,0 +1,21 @@
+{
+  "name": "@paralegal/connected-llm",
+  "version": "0.1.0", 
+  "private": true,
+  "description": "Connected LLM proxy for allowlisted external queries",
+  "scripts": {
+    "dev": "node src/server.js",
+    "build": "echo 'Connected LLM stub - no build needed'",
+    "start": "node src/server.js",
+    "typecheck": "echo 'Connected LLM stub - no typecheck'",
+    "lint": "echo 'Connected LLM stub - no lint'",
+    "format": "echo 'Connected LLM stub - no format'",
+    "test": "echo 'Connected LLM stub - no tests yet'"
+  },
+  "dependencies": {
+    "express": "^4.18.0",
+    "cors": "^2.8.5",
+    "axios": "^1.6.0"
+  },
+  "devDependencies": {}
+}

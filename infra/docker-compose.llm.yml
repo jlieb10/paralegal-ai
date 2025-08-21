@@ -1,0 +1,77 @@
+networks:
+  private_net:
+    internal: true  # No internet egress for private LLM
+
+services:
+  # Private LLM (GPU-enabled vLLM)
+  private-llm:
+    image: vllm/vllm-openai:latest
+    command: ["--model", "/models/private/model", "--host", "0.0.0.0", "--port", "8001", "--disable-log-requests"]
+    networks: 
+      - private_net
+    ports:
+      - "8001:8001"
+    volumes:
+      - "./models/private:/models/private:ro"
+    environment:
+      - NO_EGRESS=true
+      - MODEL_NAME=${LLM_PRIVATE_MODEL:-meta-llama/Meta-Llama-3.1-8B-Instruct}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: ["gpu"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Private LLM (CPU-only llama.cpp - for Apple Silicon/no-GPU)
+  private-llm-cpu:
+    image: ghcr.io/ggerganov/llama.cpp:full
+    command: ["./server", "-m", "/models/private/model.gguf", "-ngl", "0", "-c", "8192", "-a", "0.0.0.0", "-p", "8003"]
+    profiles: ["cpu-llm"]
+    networks: 
+      - private_net
+    ports:
+      - "8003:8003"
+    volumes:
+      - "./models/private:/models/private:ro"
+    environment:
+      - NO_EGRESS=true
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Connected LLM Proxy (optional - for allowlisted external queries only)
+  connected-llm-proxy:
+    image: node:20-alpine
+    working_dir: /app
+    command: ["node", "server.js"]
+    ports:
+      - "8010:8010"
+    volumes:
+      - "../apps/connected-llm:/app"
+    environment:
+      - NODE_ENV=development
+      - PORT=8010
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+    profiles: ["connected-llm"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8010/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  # Models directory for local LLM weights
+  models_private:
+    driver: local

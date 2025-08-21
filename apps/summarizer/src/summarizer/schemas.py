@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from enum import Enum
 
 
@@ -85,8 +85,8 @@ class NormalizedEmailModel(BaseModel):
     """Normalized email input for processing"""
     id: str
     plaintext: str
-    html_anchors: dict[str, dict[str, int]]  # anchor_id -> {start, end}
-    metadata: dict[str, any]
+    html_anchors: Dict[str, Dict[str, int]]  # anchor_id -> {start, end}
+    metadata: Dict[str, Any]
 
 
 class SummarizeRequestModel(BaseModel):
