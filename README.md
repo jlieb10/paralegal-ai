@@ -189,10 +189,10 @@ pnpm install
 # 2. Copy environment configuration
 cp .env.example .env
 
-# 3. Run environment checks
+# 3. Run environment checks (will show warnings about missing builds - this is expected)
 pnpm run doctor
 
-# 4. Build all services
+# 4. Build all services (fixes the warnings from doctor)
 pnpm run build
 
 # 5. Start complete system (⚠️ Downloads ~3GB+ Docker images first time)
@@ -448,6 +448,27 @@ docker system prune -a            # Clean all unused Docker resources
 ## 🔧 Troubleshooting
 
 ### Development Setup Issues
+
+#### "`pnpm run doctor` hangs or takes too long"
+
+The environment checker might hang on some systems due to network checks. Solutions:
+
+```bash
+# Skip doctor and continue with setup:
+cp .env.example .env
+pnpm run build
+pnpm run dev:frontend  # For UI work
+
+# Or run specific checks manually:
+node --version     # Check Node.js
+pnpm --version     # Check pnpm  
+ls node_modules    # Check dependencies
+```
+
+**Common causes:**
+- Network timeout during port checking
+- System differences in `netstat` command behavior
+- Slow file system operations
 
 #### "pnpm run dev is too slow / downloading huge files"
 

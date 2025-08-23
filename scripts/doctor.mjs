@@ -40,19 +40,22 @@ function header(message) {
 
 function runCheck(description, checkFn) {
   try {
+    // Show what we're checking
+    process.stdout.write(`🔍 Checking ${description}... `);
+    
     const result = checkFn();
     if (result === true) {
-      success(description);
+      console.log(`✅ ${description}`);
       return true;
     } else if (typeof result === 'string') {
-      warning(`${description}: ${result}`);
+      console.log(`⚠️  ${description}: ${result}`);
       return false;
     } else {
-      error(`${description}: Failed`);
+      console.log(`❌ ${description}: Failed`);
       return false;
     }
   } catch (err) {
-    error(`${description}: ${err.message}`);
+    console.log(`❌ ${description}: ${err.message}`);
     return false;
   }
 }
@@ -69,15 +72,24 @@ function checkNodeVersion() {
 
 function checkPnpm() {
   try {
-    const version = execSync('pnpm --version', { encoding: 'utf8' }).trim();
+    const version = execSync('pnpm --version', { 
+      encoding: 'utf8', 
+      timeout: 10000 // 10 second timeout
+    }).trim();
     const major = parseInt(version.split('.')[0]);
     if (major >= 9) {
       return true;
     } else {
       return `pnpm ${version} found, but >=9 required. Run: npm install -g pnpm@latest`;
     }
-  } catch {
-    return 'pnpm not found. Install with: npm install -g pnpm';
+  } catch (error) {
+    if (error.code === 'ENOENT' || error.message.includes('command not found')) {
+      return 'pnpm not found. Install with: npm install -g pnpm';
+    } else if (error.signal === 'SIGTERM' || error.code === 'TIMEOUT') {
+      return 'pnpm command timed out. Check if pnpm is working: pnpm --version';
+    } else {
+      return `pnpm check failed: ${error.message}`;
+    }
   }
 }
 
@@ -87,14 +99,22 @@ function checkPorts() {
 
   for (const port of portsToCheck) {
     try {
-      // Try to connect to the port
-      const { spawn } = require('child_process');
-      const output = execSync(`netstat -tuln 2>/dev/null | grep :${port} || echo ""`, { encoding: 'utf8' });
+      // Use a more reliable cross-platform approach with timeout
+      const command = process.platform === 'win32' 
+        ? `netstat -an | findstr :${port}` 
+        : `netstat -tuln 2>/dev/null | grep :${port} || true`;
+      
+      const output = execSync(command, { 
+        encoding: 'utf8', 
+        timeout: 5000 // 5 second timeout to prevent hanging
+      });
+      
       if (output.trim()) {
         busyPorts.push(port);
       }
-    } catch {
+    } catch (error) {
       // Port check failed, assume available
+      // Don't log the error as this is expected when ports are free
     }
   }
 
