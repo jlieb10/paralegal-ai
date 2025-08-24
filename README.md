@@ -52,6 +52,59 @@ Paralegal AI is an agentic system designed specifically for law firms to analyze
 /tests             # redaction, policy, summaries (golden), integration
 ```
 
+### Development Architecture Modes
+
+#### Frontend Development Mode (`pnpm run dev:frontend`)
+```
+┌─────────────────────┐
+│   Landing Page      │ ← Only this runs
+│   (Next.js)         │ 
+│   Port 3000         │ ← Uses mock data for demo
+└─────────────────────┘
+```
+- **Use for**: UI development, component work, frontend testing
+- **Resources**: ~200MB RAM, no Docker needed
+- **Setup time**: 2-3 seconds
+
+#### Backend Development Mode (`pnpm run dev:backend`)
+```
+┌─────────────────────┐    ┌──────────────────────┐
+│   Bridge Service    │    │  Summarizer Service  │
+│   (NestJS)         │    │  (FastAPI/Python)   │
+│   Port 8002         │    │   Port 8001          │
+└─────────────────────┘    └──────────────────────┘
+```
+- **Use for**: API development, service integration testing
+- **Resources**: ~500MB RAM, no LLM containers
+- **Setup time**: 10-15 seconds
+
+#### Full Stack Development Mode (`pnpm run dev`) 
+```
+┌─────────────────────┐    ┌─────────────────────┐    ┌──────────────────────┐
+│   Landing Page      │    │   Bridge Service    │    │  Summarizer Service  │
+│   (Next.js)         │◄──►│   (NestJS)         │◄──►│  (FastAPI/Python)   │
+│   Port 3000         │    │   Port 8002         │    │   Port 8001          │
+└─────────────────────┘    └─────────────────────┘    └──────────────────────┘
+           │                         │                          │
+           │                         │                          │
+           ▼                         ▼                          ▼
+┌─────────────────────┐    ┌─────────────────────┐    ┌──────────────────────┐
+│   Email Display     │    │ Redaction Engine    │    │    Private LLM       │
+│   Summary View      │    │ Query Firewall      │    │   (Docker vLLM)      │
+│   Contract Flags    │    │ Audit Logging       │    │   Port 8001/8003     │
+└─────────────────────┘    └─────────────────────┘    └──────────────────────┘
+                                     │                          │
+                                     ▼                          ▼
+                           ┌─────────────────────┐    ┌──────────────────────┐
+                           │    PostgreSQL       │    │      MinIO           │
+                           │    (Database)       │    │   (File Storage)     │
+                           │    Port 5432        │    │   Port 9000/9001     │
+                           └─────────────────────┘    └──────────────────────┘
+```
+- **Use for**: Complete system testing, LLM integration, full workflow testing  
+- **Resources**: 2-4GB RAM, requires Docker
+- **Setup time**: 3-30 minutes (depending on Docker image cache)
+
 ## 💻 Tech Stack
 
 **Frontend:**
@@ -80,76 +133,186 @@ Paralegal AI is an agentic system designed specifically for law firms to analyze
 
 ### Prerequisites
 
+#### Required for All Development
 - **Node.js 20+** - Runtime for TypeScript services
-- **pnpm 9+** - Package manager (required, not npm/yarn)
+- **pnpm 9+** - Package manager (required, not npm/yarn)  
+
+#### Required for Full Stack Development
+- **Docker & Docker Compose** - For LLM services and infrastructure
 - **Python 3.11+** - Runtime for summarizer service
-- **Docker & Docker Compose** - For production deployment
-- **Optional: GPU** - For Private LLM acceleration
+- **4+ GB free disk space** - Docker images for LLM services
+- **8+ GB RAM recommended** - For running LLM inference
+
+#### Optional
+- **GPU with CUDA** - For accelerated Private LLM inference
 
 ```bash
 # Check versions
 node --version    # Should be 20+
 pnpm --version    # Should be 9+
-python --version  # Should be 3.11+
-docker --version
+python --version  # Should be 3.11+ (full stack only)
+docker --version  # Required for full stack
+docker compose version
 ```
 
-### Installation
+### Installation Options
+
+Choose your development approach:
+
+#### Option A: Frontend Development Only (Fast Setup)
+Perfect for UI work, component development, or frontend-focused contributions:
 
 ```bash
-# 1. Clone the repository
+# 1. Clone and setup
 git clone https://github.com/jlieb10/paralegal-ai.git
 cd paralegal-ai
-
-# 2. Install dependencies
 pnpm install
 
-# 3. Copy environment configuration
+# 2. Build shared packages  
+pnpm run build
+
+# 3. Start landing page only
+cd apps/landing && pnpm run dev
+
+# ✅ Ready at http://localhost:3000 (demo mode with mock data)
+```
+
+#### Option B: Full Stack Development (Complete Setup)
+Required for backend work, AI features, or complete system testing:
+
+```bash  
+# 1. Clone and setup
+git clone https://github.com/jlieb10/paralegal-ai.git
+cd paralegal-ai
+pnpm install
+
+# 2. Copy environment configuration
 cp .env.example .env
 
-# 4. Run environment checks
+# 3. Run environment checks (will show warnings about missing builds - this is expected)
 pnpm run doctor
 
-# 5. Build all services
+# 4. Build all services (fixes the warnings from doctor)
 pnpm run build
+
+# 5. Start complete system (⚠️ Downloads ~3GB+ Docker images first time)
+pnpm run dev
+
+# ✅ Services will be available at:
+# - Landing Page: http://localhost:3000  
+# - Bridge API: http://localhost:8002
+# - Summarizer: http://localhost:8001
+# - Ingestion: http://localhost:4001
 ```
+
+**⏱️ Expected Setup Times:**
+- Frontend only: **2-3 minutes**
+- Full stack (first time): **15-30 minutes** (includes Docker image downloads)
+- Full stack (subsequent): **3-5 minutes**
 
 ## 🚀 Development
 
-### Running in Development Mode
+### Development Modes
+
+#### Frontend-Only Development (Recommended for UI work)
+
+Work on the landing page, components, and frontend features without running the full infrastructure:
 
 ```bash
-# Start all services in development mode
-pnpm run dev
+# Start just the frontend (uses mock data)
+cd apps/landing && pnpm run dev
 
-# Or start individual services:
-cd apps/landing && pnpm run dev          # Next.js frontend (port 3000)
-cd apps/bridge && pnpm run start:dev     # NestJS API (port 8002)  
-cd apps/summarizer && python -m uvicorn main:app --reload --port 8001
+# Available at:
+# - Main page: http://localhost:3000
+# - Demo interface: http://localhost:3000/demo
 ```
 
-**Access Points:**
-- **Landing Page**: http://localhost:3000
-- **Demo Interface**: http://localhost:3000/demo
-- **Bridge API**: http://localhost:8002/api
-- **Summarizer API**: http://localhost:8001 (if running)
+**Benefits:**
+- ⚡ **Fast startup** (2-3 seconds)
+- 💾 **Low resource usage** (no Docker containers)
+- 🔧 **Perfect for**: UI development, component work, styling, frontend testing
 
-### Building & Running Production Locally
+#### Individual Service Development
+
+Run specific services for focused backend development:
+
+```bash
+# Landing page only (port 3000)
+cd apps/landing && pnpm run dev
+
+# Bridge API only (port 8002) - requires build first
+cd apps/bridge && pnpm run start:dev     
+
+# Summarizer only (port 8001) - requires Python setup
+cd apps/summarizer && pnpm run dev
+```
+
+#### Full Stack Development
+
+Run the complete system for end-to-end development and testing:
+
+```bash
+# ⚠️ Warning: Downloads 3GB+ Docker images on first run
+pnpm run dev
+```
+
+**What this starts:**
+- 🌐 Landing Page (http://localhost:3000)
+- 🌉 Bridge API (http://localhost:8002)  
+- 🤖 Summarizer Service (http://localhost:8001)
+- 📨 Ingestion Service (http://localhost:4001)
+- 🧠 Private LLM (Docker containers with CPU fallback)
+
+**System Requirements:**
+- 8GB+ RAM recommended
+- 4GB+ free disk space
+- Docker running and accessible
+
+### Available Development Scripts
+
+| Command | Purpose | Resources | Setup Time | Use Case |
+|---------|---------|-----------|------------|----------|
+| `pnpm run dev:frontend` | Landing page only | Low (~200MB) | 2-3 sec | UI/component development |
+| `pnpm run dev:api` | Bridge API only | Medium (~300MB) | 10-15 sec | API development |
+| `pnpm run dev:backend` | Bridge + Summarizer | Medium (~500MB) | 15-30 sec | Backend integration |
+| `pnpm run dev` | Full stack | High (~2-4GB) | 3-30 min | Complete system testing |
+| `pnpm run dev:llm:cpu` | LLM services only | High (~1-2GB) | 5-15 min | LLM development |
+| `pnpm run dev:llm:gpu` | LLM with GPU | High (~1-2GB) | 5-15 min | GPU-accelerated LLM |
+| `docker compose up` | Production mode | Highest | 5-45 min | Production testing |
+
+#### Quick Commands Reference
+
+```bash
+# Fast development (recommended for most work)
+pnpm run dev:frontend        # Just the UI with mock data
+
+# API development  
+pnpm run dev:api            # Just the Bridge service
+pnpm run dev:backend        # Bridge + Summarizer APIs
+
+# Full system (when you need everything)
+pnpm run dev                # Complete stack (downloads Docker images)
+
+# LLM-specific development
+pnpm run dev:llm:cpu        # CPU-only LLM (faster startup)
+pnpm run dev:llm:gpu        # GPU-accelerated LLM
+pnpm run dev:llm:down       # Stop LLM containers
+
+# Production testing
+docker compose up --build   # Full production environment
+```
+
+### Production Build & Start
 
 ```bash
 # Build all services
-pnpm install
 pnpm run build
 
-# Start production server
+# Start production frontend only (fastest)
 pnpm run start:prod
 
-# Access at http://localhost:3000
-```
-
-**One-command production start:**
-```bash
-pnpm install && pnpm run build && pnpm run start:prod
+# OR start with full Docker infrastructure
+docker compose up --build
 ```
 
 ## 🔧 Configuration
@@ -225,21 +388,16 @@ pytest -q --maxfail=1 --disable-warnings
 
 ## 🐳 Docker Deployment
 
-### Local Production (Docker Compose)
+### Development with Docker (Optional)
+
+For development that requires the complete infrastructure (LLM services, database, etc.):
 
 ```bash
-# Start all services
-docker compose up --build
-
-# Access at http://localhost:3000
-```
-
-### Individual Service Deployment
-
-Perfect for solo practitioners or small firms:
-```bash
-# Full infrastructure
+# Full development infrastructure with private LLM
 docker compose -f infra/docker-compose.mono.yml up -d --build
+
+# ⚠️ Note: Downloads 3GB+ images on first run
+# ⚠️ Requires: 8GB+ RAM, 4GB+ disk space
 ```
 
 **Service URLs:**
@@ -247,10 +405,107 @@ docker compose -f infra/docker-compose.mono.yml up -d --build
 - **Bridge API**: http://localhost:8002/api
 - **Summarizer**: http://localhost:8001
 - **MinIO Console**: http://localhost:9001
+- **PostgreSQL**: localhost:5432
+
+### Production Docker Deployment
+
+#### Simple Production (Docker Compose)
+For small deployments, solo practitioners:
+
+```bash
+# Start all production services
+docker compose up --build
+
+# Access at http://localhost:3000
+```
+
+#### Full Infrastructure (All Services)
+For production with complete infrastructure:
+
+```bash
+# Complete production setup with database, storage, LLM
+docker compose -f infra/docker-compose.mono.yml up -d --build
+```
+
+### Docker Development Commands
+
+```bash
+# Start LLM services only (for backend development)
+pnpm run dev:llm          # GPU-enabled LLM
+pnpm run dev:llm:cpu      # CPU-only LLM (faster startup)
+pnpm run dev:llm:down     # Stop LLM services
+
+# Monitor containers
+docker compose logs -f landing    # Follow logs
+docker compose ps                 # List running services
+docker compose down               # Stop all services
+
+# Clean up resources
+docker compose down -v            # Stop and remove volumes
+docker system prune -a            # Clean all unused Docker resources
+```
 
 ## 🔧 Troubleshooting
 
-### Port Already in Use
+### Development Setup Issues
+
+#### "`pnpm run doctor` hangs or takes too long"
+
+The environment checker might hang on some systems due to network checks. Solutions:
+
+```bash
+# Skip doctor and continue with setup:
+cp .env.example .env
+pnpm run build
+pnpm run dev:frontend  # For UI work
+
+# Or run specific checks manually:
+node --version     # Check Node.js
+pnpm --version     # Check pnpm  
+ls node_modules    # Check dependencies
+```
+
+**Common causes:**
+- Network timeout during port checking
+- System differences in `netstat` command behavior
+- Slow file system operations
+
+#### "pnpm run dev is too slow / downloading huge files"
+
+The full development mode downloads Docker images for LLM services (~3GB+). For most development work, use frontend-only mode instead:
+
+```bash
+# Instead of: pnpm run dev
+# Use this for UI work:
+cd apps/landing && pnpm run dev
+```
+
+#### "Docker containers taking too much resources"
+
+The full stack uses Docker containers for LLM inference. Consider these alternatives:
+
+```bash
+# Stop LLM containers to save resources
+pnpm run dev:llm:down
+
+# Or start only specific services
+cd apps/landing && pnpm run dev  # Frontend only
+cd apps/bridge && pnpm run start:dev   # API only
+```
+
+#### "Cannot connect to services"
+
+Different development modes expose different services:
+
+| Development Mode | Available Services | URLs |
+|-----------------|-------------------|------|
+| Frontend Only | Landing page with mock data | http://localhost:3000 |
+| Individual Services | Varies by service started | Check service logs |
+| Full Stack | All services + LLM | All URLs listed below |
+
+### Service Connection Issues
+
+#### Port Already in Use
 ```bash
 # Find process using port
 lsof -ti:3000
@@ -262,7 +517,24 @@ kill $(lsof -ti:3000)
 PORT=3001 pnpm run start:prod
 ```
 
-### Node Version Mismatch
+#### Docker Services Not Starting
+```bash
+# Check Docker is running
+docker ps
+
+# Clean Docker cache if builds fail
+docker system prune -a
+
+# Rebuild without cache
+docker compose up --build --no-cache
+
+# Check specific service logs
+docker compose logs landing
+```
+
+### Environment & Setup Issues
+
+#### Node Version Mismatch
 ```bash
 # Using nvm
 nvm install 20
@@ -271,7 +543,7 @@ nvm use 20
 # Or update system Node.js to 20+
 ```
 
-### Missing Environment Variables
+#### Missing Environment Variables
 ```bash
 # Copy example file
 cp .env.example .env
@@ -283,7 +555,7 @@ pnpm run doctor
 pnpm run start:prod  # Look for console warnings
 ```
 
-### CSS Not Loading After Build
+#### CSS Not Loading After Build
 ```bash
 # Clear Next.js cache
 rm -rf apps/landing/.next
@@ -294,7 +566,9 @@ pnpm run build
 # Check import paths in CSS files
 ```
 
-### Build Errors
+### Build & Infrastructure Issues
+
+#### Build Errors
 ```bash
 # Clean all build outputs
 pnpm run clean
@@ -306,17 +580,65 @@ pnpm run typecheck
 pnpm run build
 ```
 
-### Docker Build Issues
+#### Python Service Issues (Summarizer)
 ```bash
-# Clean Docker cache
-docker system prune -a
+# Check Python version
+python --version  # Should be 3.11+
 
-# Build with no cache
-docker compose up --build --no-cache
+# Manual setup if automated setup fails
+cd apps/summarizer
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+pip install -r requirements.txt
 
-# Check Docker logs
-docker compose logs landing
+# Start manually
+cd src && python -m uvicorn summarizer.main:app --reload --port 8001
 ```
+
+#### Docker Image Download Timeout
+```bash
+# If Docker image downloads timeout, try:
+# 1. Check your internet connection
+# 2. Restart Docker daemon
+# 3. Use CPU-only mode (faster download)
+pnpm run dev:llm:cpu
+
+# 4. Or skip LLM entirely for frontend development
+cd apps/landing && pnpm run dev
+```
+
+### Performance & Resource Issues
+
+#### High Memory Usage During Development
+The full stack development environment can use significant resources:
+
+- **Frontend only**: ~200MB RAM
+- **Frontend + API**: ~500MB RAM  
+- **Full stack**: ~2-4GB RAM (including LLM containers)
+
+**Optimization strategies:**
+```bash
+# 1. Use frontend-only development when possible
+cd apps/landing && pnpm run dev
+
+# 2. Stop unused Docker containers
+docker compose down
+
+# 3. Use CPU-only LLM (smaller memory footprint)
+pnpm run dev:llm:cpu
+
+# 4. Monitor resource usage
+docker stats
+```
+
+### Quick Development Mode Reference
+
+| Use Case | Command | Resource Usage | Setup Time |
+|----------|---------|---------------|------------|
+| **UI/Frontend work** | `cd apps/landing && pnpm run dev` | Low (~200MB) | 2-3 seconds |
+| **API development** | `cd apps/bridge && pnpm run start:dev` | Medium (~500MB) | 10-15 seconds |
+| **Full system testing** | `pnpm run dev` | High (~2-4GB) | 3-30 minutes |
+| **Production testing** | `docker compose up --build` | Highest | 5-45 minutes |
 
 ## 🤝 Contributing
 
