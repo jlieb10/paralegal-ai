@@ -100,8 +100,7 @@ function checkPorts() {
   for (const port of portsToCheck) {
     try {
       // Use a more reliable cross-platform approach with timeout
-      const command = process.platform === 'win32' 
-        ? `netstat -an | findstr :${port}` 
+        ? `netstat -an | findstr ":${port} "` 
         : `netstat -tuln 2>/dev/null | grep :${port} || true`;
       
       const output = execSync(command, { 
